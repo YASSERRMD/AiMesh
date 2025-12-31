@@ -166,7 +166,10 @@ We welcome contributions from the community. Please read our [Contributing Guide
 - [x] Phase 1B: Core Implementation
 - [x] Phase 1C: Integration and Testing
 - [x] Phase 1D: Final Polish
-- [ ] Phase 2: Enterprise Features (Rate Limiting, Multi-tenancy)
+- [x] Phase 2A: Rate Limiting (Token Bucket, Sliding Window)
+- [x] Phase 2B: Multi-tenancy (Quotas, Tiers, Isolation)
+- [x] Phase 2C: Priority Queue (Deadline-Aware Scheduling)
+- [x] Phase 2D: Advanced Observability (Prometheus, Health Checks)
 - [ ] Phase 3: SDKs (Python, Node.js, Go)
 - [ ] Phase 4: Global Scale (Federation, Geo-routing)
 

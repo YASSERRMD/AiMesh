@@ -324,18 +324,18 @@ mod tests {
         let config = RateLimitConfig {
             requests_per_second: 10,
             burst_capacity: 20,
-            window_secs: 1,
+            window_secs: 10, // 10 * 10 = 100 sliding window limit
             adaptive: false,
         };
         
         let limiter = RateLimiter::new(config);
         
-        // Should allow burst
+        // Should allow burst up to bucket capacity (20)
         for _ in 0..20 {
             assert!(limiter.acquire("test-key").is_ok());
         }
         
-        // Should be rate limited now
+        // Should be rate limited now (bucket exhausted)
         assert!(limiter.acquire("test-key").is_err());
     }
     
