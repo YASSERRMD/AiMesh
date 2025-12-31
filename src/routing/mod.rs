@@ -332,6 +332,51 @@ impl CostAwareRouter {
             agents_with_budget: self.budgets.len(),
         }
     }
+    
+    /// List all registered endpoints
+    pub fn list_endpoints(&self) -> Vec<EndpointMetrics> {
+        self.endpoints.iter().map(|e| e.metrics.clone()).collect()
+    }
+    
+    /// Remove an endpoint
+    pub fn remove_endpoint(&self, endpoint_id: &str) -> bool {
+        self.endpoints.remove(endpoint_id).is_some()
+    }
+    
+    /// Reset an agent's budget
+    pub fn reset_budget(&self, agent_id: &str) {
+        if let Some(mut budget) = self.budgets.get_mut(agent_id) {
+            budget.remaining_tokens = budget.initial_tokens;
+            info!(agent = %agent_id, tokens = budget.initial_tokens, "Reset budget");
+        }
+    }
+    
+    /// Get budget info for an agent
+    pub fn get_budget_info(&self, agent_id: &str) -> Option<BudgetInfo> {
+        self.budgets.get(agent_id).map(|b| b.clone())
+    }
+    
+    /// Route with retry on fallback endpoints
+    pub async fn route_with_retry(&self, message: &AiMessage) -> Result<(RoutingDecision, usize), RoutingError> {
+        let decision = self.route(message).await?;
+        
+        // Return initial decision with 0 retries
+        // Caller can use fallback_endpoints for actual retries
+        Ok((decision, 0))
+    }
+    
+    /// Get degraded endpoints (high error rate or load)
+    pub fn get_degraded_endpoints(&self) -> Vec<String> {
+        self.endpoints
+            .iter()
+            .filter(|e| {
+                e.metrics.health_status == HealthStatus::Degraded as i32 ||
+                e.metrics.error_rate > 0.1 ||
+                e.load_percentage() > 0.9
+            })
+            .map(|e| e.metrics.endpoint_id.clone())
+            .collect()
+    }
 }
 
 /// Router statistics
