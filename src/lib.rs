@@ -16,6 +16,7 @@ pub mod orchestration;
 pub mod transport;
 pub mod ratelimit;
 pub mod tenant;
+pub mod priority;
 
 use std::sync::Arc;
 use thiserror::Error;
