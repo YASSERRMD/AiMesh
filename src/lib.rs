@@ -14,6 +14,7 @@ pub mod observability;
 pub mod dedup;
 pub mod orchestration;
 pub mod transport;
+pub mod ratelimit;
 
 use std::sync::Arc;
 use thiserror::Error;
@@ -22,6 +23,7 @@ pub use protocol::*;
 pub use routing::{CostAwareRouter, RouterConfig, RoutingError};
 pub use storage::{StorageLayer, StorageConfig, StorageBackend, StorageError};
 pub use observability::ObservabilityLayer;
+pub use ratelimit::{RateLimiter, RateLimitConfig, RateLimitError};
 
 /// AiMesh errors
 #[derive(Error, Debug)]
@@ -34,6 +36,8 @@ pub enum AiMeshError {
     Storage(#[from] storage::StorageError),
     #[error("Transport error: {0}")]
     Transport(String),
+    #[error("Rate limit error: {0}")]
+    RateLimit(#[from] ratelimit::RateLimitError),
     #[error("Configuration error: {0}")]
     Config(String),
 }
@@ -47,10 +51,14 @@ pub struct AiMeshConfig {
     pub router: RouterConfig,
     /// Storage configuration
     pub storage: StorageConfig,
+    /// Rate limit configuration
+    pub rate_limit: RateLimitConfig,
     /// Enable semantic deduplication
     pub enable_dedup: bool,
     /// Dedup cache TTL in seconds
     pub dedup_ttl_secs: u64,
+    /// Enable rate limiting
+    pub enable_rate_limit: bool,
 }
 
 impl Default for AiMeshConfig {
@@ -59,8 +67,10 @@ impl Default for AiMeshConfig {
             bind_addr: "0.0.0.0:8080".into(),
             router: RouterConfig::default(),
             storage: StorageConfig::default(),
+            rate_limit: RateLimitConfig::default(),
             enable_dedup: true,
             dedup_ttl_secs: 3600,
+            enable_rate_limit: true,
         }
     }
 }
@@ -71,6 +81,7 @@ pub struct AiMesh {
     pub router: Arc<CostAwareRouter>,
     pub storage: Arc<StorageLayer>,
     pub observability: Arc<ObservabilityLayer>,
+    pub rate_limiter: Arc<RateLimiter>,
 }
 
 impl AiMesh {
@@ -79,12 +90,14 @@ impl AiMesh {
         let router = Arc::new(CostAwareRouter::new(config.router.clone()));
         let storage = Arc::new(StorageLayer::new(config.storage.clone())?);
         let observability = Arc::new(ObservabilityLayer::new());
+        let rate_limiter = Arc::new(RateLimiter::new(config.rate_limit.clone()));
         
         Ok(Self {
             config,
             router,
             storage,
             observability,
+            rate_limiter,
         })
     }
     
@@ -94,6 +107,11 @@ impl AiMesh {
         
         // 1. Validate message
         message.validate()?;
+        
+        // 2. Check rate limit
+        if self.config.enable_rate_limit {
+            self.rate_limiter.acquire(&message.agent_id)?;
+        }
         
         // 2. Check for duplicates (if enabled)
         if self.config.enable_dedup {
