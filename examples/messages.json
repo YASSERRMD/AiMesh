@@ -1,0 +1,80 @@
+{
+  "simple_message": {
+    "agent_id": "agent-001",
+    "message_id": "01942f5e-7c8d-7000-8000-123456789abc",
+    "payload": "SGVsbG8sIEFpTWVzaCE=",
+    "estimated_cost_tokens": 100.0,
+    "budget_tokens": 1000.0,
+    "deadline_ms": 1735651200000,
+    "task_graph_id": "",
+    "dependencies": [],
+    "priority": 50,
+    "dedup_context": "chat:user123",
+    "trace_id": "01942f5e-7c8d-7000-8000-abcdef123456",
+    "metadata": {
+      "model": "gpt-4",
+      "temperature": "0.7"
+    },
+    "timestamp": 1735651100000000000
+  },
+  "scatter_gather_task": {
+    "task_id": "task-analysis-001",
+    "status": "TASK_PENDING",
+    "steps": [
+      {
+        "step_id": "step-1-fetch",
+        "status": "TASK_PENDING",
+        "dependencies": [],
+        "message": {
+          "agent_id": "data-agent",
+          "payload": "Fetch user data",
+          "priority": 80
+        }
+      },
+      {
+        "step_id": "step-2-analyze",
+        "status": "TASK_PENDING",
+        "dependencies": ["step-1-fetch"],
+        "message": {
+          "agent_id": "analysis-agent",
+          "payload": "Analyze fetched data",
+          "priority": 70
+        }
+      },
+      {
+        "step_id": "step-3-summarize",
+        "status": "TASK_PENDING",
+        "dependencies": ["step-2-analyze"],
+        "message": {
+          "agent_id": "summary-agent",
+          "payload": "Generate summary",
+          "priority": 60
+        }
+      }
+    ]
+  },
+  "routing_decision": {
+    "message_id": "01942f5e-7c8d-7000-8000-123456789abc",
+    "target_endpoint": "anthropic-claude",
+    "estimated_latency_ms": 300,
+    "estimated_cost": 0.015,
+    "routing_reason": "Best score 12.5 (cost: $15/1k, load: 10%, latency: 300ms)",
+    "fallback_endpoints": ["openai-gpt4", "local-llama"],
+    "score_breakdown": {
+      "cost_score": 6.0,
+      "load_score": 3.0,
+      "latency_score": 3.5,
+      "total_score": 12.5
+    }
+  },
+  "endpoint_metrics": {
+    "endpoint_id": "anthropic-claude",
+    "capacity": 1000,
+    "current_load": 100,
+    "cost_per_1k_tokens": 15.0,
+    "latency_p99_ms": 300.0,
+    "error_rate": 0.005,
+    "last_health_check": 1735651100000000000,
+    "health_status": "HEALTHY"
+  }
+}
