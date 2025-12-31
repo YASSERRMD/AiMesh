@@ -162,6 +162,50 @@ impl OrchestrationEngine {
         self.tasks.get(task_id).map(|t| t.clone())
     }
     
+    /// Cancel a running task
+    pub fn cancel_task(&self, task_id: &str) -> Result<(), OrchestrationError> {
+        if let Some(mut task) = self.tasks.get_mut(task_id) {
+            task.status = TaskStatus::TaskFailed as i32;
+            task.error = "Cancelled by user".to_string();
+            task.completed_at = Self::now_ns();
+            info!(task_id = %task_id, "Task cancelled");
+            Ok(())
+        } else {
+            Err(OrchestrationError::TaskNotFound(task_id.into()))
+        }
+    }
+    
+    /// List all tasks
+    pub fn list_tasks(&self) -> Vec<TaskState> {
+        self.tasks.iter().map(|t| t.clone()).collect()
+    }
+    
+    /// Get task progress (completed steps / total steps)
+    pub fn get_progress(&self, task_id: &str) -> Option<(usize, usize)> {
+        self.tasks.get(task_id).map(|task| {
+            let completed = task.steps.iter()
+                .filter(|s| s.status == TaskStatus::TaskCompleted as i32)
+                .count();
+            (completed, task.steps.len())
+        })
+    }
+    
+    /// Check if task is complete
+    pub fn is_complete(&self, task_id: &str) -> bool {
+        self.tasks.get(task_id)
+            .map(|t| t.status == TaskStatus::TaskCompleted as i32 || t.status == TaskStatus::TaskFailed as i32)
+            .unwrap_or(false)
+    }
+    
+    /// Remove completed task from memory
+    pub fn cleanup_task(&self, task_id: &str) -> bool {
+        if self.is_complete(task_id) {
+            self.tasks.remove(task_id).is_some()
+        } else {
+            false
+        }
+    }
+    
     fn now_ns() -> i64 {
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
