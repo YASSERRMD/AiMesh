@@ -170,8 +170,20 @@ We welcome contributions from the community. Please read our [Contributing Guide
 - [x] Phase 2B: Multi-tenancy (Quotas, Tiers, Isolation)
 - [x] Phase 2C: Priority Queue (Deadline-Aware Scheduling)
 - [x] Phase 2D: Advanced Observability (Prometheus, Health Checks)
-- [ ] Phase 3: SDKs (Python, Node.js, Go)
+- [x] Phase 3A: Python SDK
+- [x] Phase 3B: Node.js/TypeScript SDK
+- [x] Phase 3C: Go SDK
 - [ ] Phase 4: Global Scale (Federation, Geo-routing)
+
+## SDKs
+
+Client libraries are available in multiple languages:
+
+| Language | Package | Documentation |
+|----------|---------|---------------|
+| Python | `pip install aimesh` | [sdk/python](sdk/python) |
+| Node.js | `npm install @aimesh/sdk` | [sdk/nodejs](sdk/nodejs) |
+| Go | `go get github.com/YASSERRMD/AiMesh/sdk/go` | [sdk/go](sdk/go) |
 
 ## License
 
