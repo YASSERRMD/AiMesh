@@ -19,6 +19,7 @@ pub mod tenant;
 pub mod priority;
 pub mod metrics;
 pub mod federation;
+pub mod georouting;
 
 use std::sync::Arc;
 use thiserror::Error;
