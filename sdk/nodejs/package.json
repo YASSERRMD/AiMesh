@@ -1,0 +1,39 @@
+{
+    "name": "@aimesh/sdk",
+    "version": "0.1.0",
+    "description": "Node.js SDK for AiMesh - High-Performance AI Agent Message Queue",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist/**/*"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "lint": "eslint src/**/*.ts",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "ai",
+        "message-queue",
+        "routing",
+        "agents",
+        "llm",
+        "aimesh"
+    ],
+    "author": "YASSERRMD",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/YASSERRMD/AiMesh.git",
+        "directory": "sdk/nodejs"
+    },
+    "homepage": "https://github.com/YASSERRMD/AiMesh",
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
