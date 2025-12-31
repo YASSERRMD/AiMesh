@@ -1,0 +1,313 @@
+// AiMesh Core Message Protocol
+// High-performance AI agent message routing protocol
+// Version: 1.0.0
+
+syntax = "proto3";
+
+package aimesh;
+
+// Core AI Message for agent communication
+message AIMessage {
+    // Unique identifier for the sending agent
+    string agent_id = 1;
+    
+    // Unique message identifier (UUID v7 format for time-ordering)
+    string message_id = 2;
+    
+    // Binary payload (model input, embeddings, etc.)
+    bytes payload = 3;
+    
+    // Estimated token cost for this message
+    double estimated_cost_tokens = 4;
+    
+    // Budget limit in tokens for this request
+    double budget_tokens = 5;
+    
+    // Deadline timestamp in milliseconds since epoch
+    int64 deadline_ms = 6;
+    
+    // Task graph identifier for scatter-gather operations
+    string task_graph_id = 7;
+    
+    // Dependencies on other message IDs (must complete before this)
+    repeated string dependencies = 8;
+    
+    // Priority level (0-100, higher = more urgent)
+    int32 priority = 9;
+    
+    // Context string for semantic deduplication
+    string dedup_context = 10;
+    
+    // Distributed tracing identifier
+    string trace_id = 11;
+    
+    // Arbitrary key-value metadata
+    map<string, string> metadata = 12;
+    
+    // Message creation timestamp (nanoseconds since epoch)
+    int64 timestamp = 13;
+}
+
+// Routing decision made by the CostAwareRouter
+message RoutingDecision {
+    // Message ID this decision is for
+    string message_id = 1;
+    
+    // Selected target endpoint URI
+    string target_endpoint = 2;
+    
+    // Estimated latency for this route in milliseconds
+    int32 estimated_latency_ms = 3;
+    
+    // Estimated cost for this route
+    double estimated_cost = 4;
+    
+    // Human-readable reason for this routing decision
+    string routing_reason = 5;
+    
+    // Fallback endpoints in case primary fails
+    repeated string fallback_endpoints = 6;
+    
+    // Score breakdown for observability
+    RoutingScore score_breakdown = 7;
+}
+
+// Detailed routing score breakdown
+message RoutingScore {
+    double cost_score = 1;
+    double load_score = 2;
+    double latency_score = 3;
+    double total_score = 4;
+}
+
+// Acknowledgment message for processed requests
+message AcknowledgmentMessage {
+    // Original message ID being acknowledged
+    string original_message_id = 1;
+    
+    // Processing status
+    AckStatus status = 2;
+    
+    // Actual tokens consumed
+    double tokens_used = 3;
+    
+    // Actual processing latency in milliseconds
+    int32 processing_latency_ms = 4;
+    
+    // Error message if status is FAILED
+    string error = 5;
+    
+    // Result payload if processing succeeded
+    bytes result = 6;
+}
+
+// Acknowledgment status enum
+enum AckStatus {
+    ACK_STATUS_UNSPECIFIED = 0;
+    ACK_RECEIVED = 1;
+    ACK_PROCESSED = 2;
+    ACK_FAILED = 3;
+}
+
+// Endpoint metrics for routing decisions
+message EndpointMetrics {
+    // Unique endpoint identifier
+    string endpoint_id = 1;
+    
+    // Maximum concurrent requests this endpoint can handle
+    uint32 capacity = 2;
+    
+    // Current number of active requests
+    uint32 current_load = 3;
+    
+    // Cost per 1000 tokens at this endpoint
+    double cost_per_1k_tokens = 4;
+    
+    // P99 latency in milliseconds
+    float latency_p99_ms = 5;
+    
+    // Error rate as a percentage (0.0 - 1.0)
+    float error_rate = 6;
+    
+    // Last health check timestamp (nanoseconds)
+    int64 last_health_check = 7;
+    
+    // Current health status
+    HealthStatus health_status = 8;
+}
+
+// Health status for endpoints
+enum HealthStatus {
+    HEALTH_STATUS_UNSPECIFIED = 0;
+    HEALTHY = 1;
+    DEGRADED = 2;
+    UNHEALTHY = 3;
+}
+
+// Task state for scatter-gather orchestration
+message TaskState {
+    // Unique task identifier
+    string task_id = 1;
+    
+    // Current task status
+    TaskStatus status = 2;
+    
+    // Individual task steps
+    repeated TaskStep steps = 3;
+    
+    // Task start timestamp (nanoseconds)
+    int64 started_at = 4;
+    
+    // Task completion timestamp (nanoseconds)
+    int64 completed_at = 5;
+    
+    // Results keyed by step ID
+    map<string, bytes> results = 6;
+    
+    // Error message if task failed
+    string error = 7;
+}
+
+// Task status enum
+enum TaskStatus {
+    TASK_STATUS_UNSPECIFIED = 0;
+    TASK_PENDING = 1;
+    TASK_RUNNING = 2;
+    TASK_COMPLETED = 3;
+    TASK_FAILED = 4;
+}
+
+// Individual step within a task graph
+message TaskStep {
+    // Unique step identifier
+    string step_id = 1;
+    
+    // Step status
+    TaskStatus status = 2;
+    
+    // Dependencies on other step IDs
+    repeated string dependencies = 3;
+    
+    // Message to execute for this step
+    AIMessage message = 4;
+    
+    // Result if completed
+    bytes result = 5;
+    
+    // Error if failed
+    string error = 6;
+}
+
+// Deduplication record for semantic caching
+message DeduplicationRecord {
+    // Blake3 hash of payload + context
+    string semantic_hash = 1;
+    
+    // Record creation timestamp (nanoseconds)
+    int64 timestamp = 2;
+    
+    // Time-to-live in milliseconds
+    uint64 ttl_ms = 3;
+    
+    // Cached result if available
+    bytes result = 4;
+}
+
+// Budget information per agent
+message BudgetInfo {
+    // Agent identifier
+    string agent_id = 1;
+    
+    // Initial token budget
+    double initial_tokens = 2;
+    
+    // Remaining tokens
+    double remaining_tokens = 3;
+    
+    // Current consumption rate (tokens/second)
+    double consumption_rate = 4;
+    
+    // Budget reset timestamp (nanoseconds)
+    int64 reset_at = 5;
+}
+
+// Transaction record for ACID operations
+message TransactionRecord {
+    // Unique transaction identifier
+    string transaction_id = 1;
+    
+    // Transaction status
+    TransactionStatus status = 2;
+    
+    // Steps in this transaction
+    repeated TransactionStep steps = 3;
+    
+    // Start timestamp (nanoseconds)
+    int64 started_at = 4;
+    
+    // Completion timestamp (nanoseconds)
+    int64 completed_at = 5;
+}
+
+// Transaction status enum
+enum TransactionStatus {
+    TRANSACTION_STATUS_UNSPECIFIED = 0;
+    TRANSACTION_PENDING = 1;
+    TRANSACTION_COMMITTING = 2;
+    TRANSACTION_COMMITTED = 3;
+    TRANSACTION_ROLLING_BACK = 4;
+    TRANSACTION_ROLLED_BACK = 5;
+}
+
+// Individual transaction step
+message TransactionStep {
+    // Step index
+    uint32 index = 1;
+    
+    // Action name
+    string action = 2;
+    
+    // Action payload
+    bytes payload = 3;
+    
+    // Compensation action for rollback
+    string compensation_action = 4;
+    
+    // Compensation payload
+    bytes compensation_payload = 5;
+    
+    // Step completed successfully
+    bool completed = 6;
+}
+
+// Metric value for observability
+message MetricValue {
+    // Metric name
+    string name = 1;
+    
+    // Metric type
+    MetricType metric_type = 2;
+    
+    // Timestamp bucket (hour granularity)
+    int64 hour_timestamp = 3;
+    
+    // Counter or sum value
+    double value = 4;
+    
+    // Count of samples
+    uint64 count = 5;
+    
+    // Percentile values for histograms
+    double p50 = 6;
+    double p99 = 7;
+    double p999 = 8;
+    double max = 9;
+}
+
+// Metric type enum
+enum MetricType {
+    METRIC_TYPE_UNSPECIFIED = 0;
+    COUNTER = 1;
+    GAUGE = 2;
+    HISTOGRAM = 3;
+}
