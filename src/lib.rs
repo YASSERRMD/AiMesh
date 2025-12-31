@@ -15,6 +15,7 @@ pub mod dedup;
 pub mod orchestration;
 pub mod transport;
 pub mod ratelimit;
+pub mod tenant;
 
 use std::sync::Arc;
 use thiserror::Error;
